@@ -122,8 +122,8 @@ def main():
     train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=0, collate_fn=collate_fn)
     val_loader = DataLoader(dataset=val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=0, collate_fn=collate_fn)
     
-    print(f"📊 Using {len(train_dataset)} training samples.")
-    print(f"📊 Using {len(val_dataset)} validation samples.")
+    print(f"Using {len(train_dataset)} training samples.")
+    print(f"Using {len(val_dataset)} validation samples.")
     
     # --- Model, Loss, Optimizer, and Scheduler ---
     # Use transfer learning with a pre-trained EfficientNet model. This leverages knowledge
@@ -153,7 +153,7 @@ def main():
     os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
     os.makedirs(ERROR_ANALYSIS_DIR, exist_ok=True)
     
-    print("\n🚀 Starting advanced training...")
+    print("\nStarting advanced training...")
     for epoch in range(NUM_EPOCHS):
         model.train() # Set the model to training mode (enables dropout, etc.).
         running_loss = 0.0
@@ -215,10 +215,10 @@ def main():
         
         # --- Early Stopping Check ---
         if epochs_no_improve >= EARLY_STOPPING_PATIENCE:
-            print(f"\n🛑 Early stopping triggered after {EARLY_STOPPING_PATIENCE} epochs with no improvement.")
+            print(f"\n Early stopping triggered after {EARLY_STOPPING_PATIENCE} epochs with no improvement.")
             break
 
-    print(f"\n--- Finished Training ---\n✅ Best model saved to {MODEL_SAVE_PATH} with MAE: {best_mae:.2f}")
+    print(f"\n--- Finished Training ---\n Best model saved to {MODEL_SAVE_PATH} with MAE: {best_mae:.2f}")
 
 if __name__ == '__main__':
     main()
