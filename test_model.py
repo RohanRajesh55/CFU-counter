@@ -114,10 +114,10 @@ def predict_single_image(model, image_path, transform):
         # The model expects a 4D tensor: [batch_size, channels, height, width]
         image_tensor = transform(image).unsqueeze(0)
     except (FileNotFoundError, UnidentifiedImageError):
-        print(f"🛑 Error: Cannot identify image file. It may be corrupted or not found: '{image_path}'")
+        print(f"Error: Cannot identify image file. It may be corrupted or not found: '{image_path}'")
         return
     except Exception as e:
-        print(f"🛑 Unexpected error loading '{image_path}': {e}")
+        print(f"Unexpected error loading '{image_path}': {e}")
         return
 
     # Disable gradient calculation for inference to save memory and speed up
@@ -127,8 +127,8 @@ def predict_single_image(model, image_path, transform):
         # Extract the single floating-point number from the output tensor
         predicted_count = output.item()
 
-    print(f"\n🖼️ Image: {os.path.basename(image_path)}")
-    print(f"🔬 Predicted Colony Count: {predicted_count:.2f}")
+    print(f"\nImage: {os.path.basename(image_path)}")
+    print(f"Predicted Colony Count: {predicted_count:.2f}")
 
 # --- Batch test function ---
 def test_final_model(model, transform):
@@ -147,7 +147,7 @@ def test_final_model(model, transform):
                       if f.endswith(('_val.txt', '_test.txt'))]
 
     if not test_txt_files:
-        print(f"🛑 Error: No files ending in '_val.txt' or '_test.txt' found in '{TRAINING_LISTS_DIR}'")
+        print(f"Error: No files ending in '_val.txt' or '_test.txt' found in '{TRAINING_LISTS_DIR}'")
         return
 
     # Create the dataset and dataloader using the test files
@@ -159,7 +159,7 @@ def test_final_model(model, transform):
     )
     test_loader = DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=0, collate_fn=collate_fn)
 
-    print(f"📊 Testing on {len(test_dataset)} samples...")
+    print(f"Testing on {len(test_dataset)} samples...")
     if len(test_dataset) == 0:
         print("Dataset is empty. Please check your training list files.")
         return
@@ -196,8 +196,8 @@ def test_final_model(model, transform):
     accuracy = (correct_predictions / len(test_dataset)) * 100
 
     print("\n--- Final Test Results ---")
-    print(f"📈 Mean Absolute Error (MAE): {avg_mae:.2f} colonies")
-    print(f"🎯 Accuracy (within ±{ACCURACY_TOLERANCE} colonies): {accuracy:.2f}%")
+    print(f"Mean Absolute Error (MAE): {avg_mae:.2f} colonies")
+    print(f"Accuracy (within ±{ACCURACY_TOLERANCE} colonies): {accuracy:.2f}%")
 
     # Optionally, print all individual results for detailed analysis
     print("\n--- Actual vs Predicted Counts ---")
@@ -229,7 +229,7 @@ if __name__ == '__main__':
         if os.path.isfile(path_arg):
             predict_single_image(model, path_arg, transform)
         else:
-            print(f"🛑 '{path_arg}' is not a valid image file.")
+            print(f"'{path_arg}' is not a valid image file.")
     else:
         # If no argument was provided, run in full batch testing mode
         test_final_model(model, transform)
