@@ -27,7 +27,7 @@ def collate_fn(batch):
 
 # --- NEW: Function to automatically discover all classes ---
 def discover_classes(dataset_dir, lists_dir):
-    print("🔍 Discovering classes...")
+    print("Discovering classes...")
     class_names = set()
     all_sample_ids = []
 
@@ -56,7 +56,7 @@ def discover_classes(dataset_dir, lists_dir):
                     class_names.add(class_name)
     
     sorted_classes = sorted(list(class_names))
-    print(f"✅ Discovered {len(sorted_classes)} classes: {sorted_classes}")
+    print(f" Discovered {len(sorted_classes)} classes: {sorted_classes}")
     return sorted_classes
 
 class AgarDataset(Dataset):
@@ -146,7 +146,7 @@ def main():
     epochs_no_improve = 0
     os.makedirs(ERROR_ANALYSIS_DIR, exist_ok=True)
     
-    print("\n🚀 Starting training for Multi-Task CNN...")
+    print("\n Starting training for Multi-Task CNN...")
     for epoch in range(NUM_EPOCHS):
         model.train()
         running_loss = 0.0
@@ -190,10 +190,10 @@ def main():
             epochs_no_improve += 1
         
         if epochs_no_improve >= EARLY_STOPPING_PATIENCE:
-            print(f"\n🛑 Early stopping triggered after {EARLY_STOPPING_PATIENCE} epochs with no improvement.")
+            print(f"\n Early stopping triggered after {EARLY_STOPPING_PATIENCE} epochs with no improvement.")
             break
 
-    print(f"--- Finished Training ---\n✅ Best model saved to {MODEL_SAVE_PATH} with MAE: {best_mae:.2f}")
+    print(f"--- Finished Training ---\n Best model saved to {MODEL_SAVE_PATH} with MAE: {best_mae:.2f}")
 
 if __name__ == '__main__':
     main()
