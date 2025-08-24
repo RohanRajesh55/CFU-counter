@@ -114,7 +114,7 @@ class VanillaDeepCNN(nn.Module):
     The definition of the multi-task CNN. This must be an exact copy of the
     model architecture used during training to load the weights correctly.
     """
-    def __init__(self, in_channels=3, num_conv_blocks=6, base_filters=32, fc_size=512, dropout=0.4, num_classes=7):
+    def __init__(self, in_channels=3, num_conv_blocks=8, base_filters=32, fc_size=512, dropout=0.4, num_classes=7):
         super().__init__()
         # --- Shared Feature Extractor ("Body") ---
         layers, c, f = [], in_channels, base_filters
