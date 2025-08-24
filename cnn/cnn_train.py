@@ -50,7 +50,7 @@ DEFAULT_CFG = {
     "weight_decay": 1e-5,
     "num_workers": 4,
     "seed": 42,
-    "num_conv_blocks": 6,             # Depth of the custom CNN
+    "num_conv_blocks": 8,             # Depth of the custom CNN
     "base_filters": 32,              # Width of the first layer
     "fc_size": 512,                  # Size of the fully connected layers
     "dropout": 0.4,
@@ -171,7 +171,7 @@ class VanillaDeepCNN(nn.Module):
     A custom multi-task CNN. It has a shared feature extraction "body"
     and two separate "heads" for the two different tasks.
     """
-    def __init__(self, in_channels=3, num_conv_blocks=6, base_filters=32, fc_size=512, dropout=0.4, num_classes=7):
+    def __init__(self, in_channels=3, num_conv_blocks=8, base_filters=32, fc_size=512, dropout=0.4, num_classes=7):
         super().__init__()
         # --- Shared Feature Extractor ("Body") ---
         # A series of convolutional blocks that learn to extract visual features
