@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # ===================================================================
 # --- CONFIGURATION ---
+# Edit the paths and settings below
 # ===================================================================
 
 # --- Mode 1: Full Validation Report ---
@@ -36,7 +37,7 @@ DATA_YAML_PATH = "/home/ashwin/projects/Bacteria_colony_detection/yolo_data/data
 CONF_THRESHOLD = 0.40
 IMG_SIZE = 1024
 BATCH_SIZE = 16
-FONT_SIZE = 30
+FONT_SIZE = 200
 COUNT_ACCURACY_BUFFERS = [#(25, 1), (100, 5), 
     (float('inf'), 10)]
 
@@ -135,9 +136,12 @@ class YOLOReportGenerator:
         draw = ImageDraw.Draw(img, "RGBA")
         img_width, img_height = img.size
         
-        try: font = ImageFont.load_default(size=self.font_size)
-        except AttributeError: font = ImageFont.load_default()
+        try:
+            font = ImageFont.load_default(size=self.font_size)
+        except AttributeError:
+            font = ImageFont.load_default()
 
+        # Get prediction data first
         predicted_detections = [self.class_names[int(box.cls[0])] for box in results.boxes]
         pred_counts = Counter(predicted_detections)
         pred_str = f"Predicted: {len(predicted_detections)} ({', '.join(f'{k}: {v}' for k, v in pred_counts.items()) or 'None'})"
@@ -148,6 +152,7 @@ class YOLOReportGenerator:
         summary_lines = [(pred_str, "red")]
         actual_count, count_difference = "N/A", "N/A"
         
+        # Only get ground truth data if processing a directory
         if self.mode == 'full_report':
             label_path = self.labels_path / f"{image_path.stem}.txt"
             actual_detections = self._read_yolo_labels(label_path, (img_height, img_width))
@@ -159,6 +164,7 @@ class YOLOReportGenerator:
             actual_count = len(actual_detections)
             count_difference = len(predicted_detections) - actual_count
         
+        # Draw summary text in the top-right
         y_offset = 10
         for text, color in summary_lines:
             text_bbox = draw.textbbox((0, 0), text, font=font)
@@ -169,7 +175,11 @@ class YOLOReportGenerator:
             draw.text((text_x, text_y), text, fill=color, font=font)
             y_offset += text_height + 10
         
-        summary_row = {"Image Name": image_path.name, "Actual Count": actual_count, "Predicted Count": len(predicted_detections), "Count Difference": count_difference, "Predicted Classes": ', '.join(f'{k}: {v}' for k, v in pred_counts.items()) or 'None'}
+        summary_row = {
+            "Image Name": image_path.name, "Actual Count": actual_count, 
+            "Predicted Count": len(predicted_detections), "Count Difference": count_difference,
+            "Predicted Classes": ', '.join(f'{k}: {v}' for k, v in pred_counts.items()) or 'None'
+        }
         return summary_row, img
 
     def _read_yolo_labels(self, label_file_path, image_shape):
@@ -197,7 +207,6 @@ class YOLOReportGenerator:
         logging.info(f"Successfully created detection summary at: {csv_path}")
 
     def _log_final_summary(self, metrics, summary_data):
-        # (This function's logic remains the same)
         if not summary_data: return
         logging.info("--- FINAL PERFORMANCE SUMMARY ---")
         correct_strict, correct_buffered = 0, 0
@@ -213,20 +222,21 @@ class YOLOReportGenerator:
         total_images = len(summary_data)
         strict_accuracy = (correct_strict / total_images) * 100 if total_images > 0 else 0
         buffered_accuracy = (correct_buffered / total_images) * 100 if total_images > 0 else 0
-        logging.info(f"Strict Count Accuracy       : {strict_accuracy:.2f} % ({correct_strict}/{total_images})")
+        logging.info(f"Exact Count Accuracy       : {strict_accuracy:.2f} % ({correct_strict}/{total_images})")
         logging.info(f"Buffered Count Accuracy     : {buffered_accuracy:.2f} % ({correct_buffered}/{total_images})")
         actual_counts = [row["Actual Count"] for row in summary_data]
         predicted_counts = [row["Predicted Count"] for row in summary_data]
         try:
             pseudo_r_squared = np.corrcoef(actual_counts, predicted_counts)[0, 1]**2
-            logging.info(f"Pseudo R-squared (Counts)   : {pseudo_r_squared:.4f}")
+            logging.info(f" R-squared (Counts)   : {pseudo_r_squared:.4f}")
         except Exception:
             logging.warning("Pseudo R-squared could not be calculated.")
         if metrics:
-            logging.info(f"Overall mAP50-95              : {metrics.box.map:.3f}")
-            logging.info(f"Overall mAP50                 : {metrics.box.map50:.3f}")
-            logging.info(f"Overall Precision             : {metrics.box.p[0]:.3f}")
+            classification_accuracy = metrics.box.p[0] * 100
+            logging.info(f"Classification Accuracy (P)   : {classification_accuracy:.2f} %")
             logging.info(f"Overall Recall                : {metrics.box.r[0]:.3f}")
+            logging.info(f"Overall mAP50                 : {metrics.box.map50:.3f}")
+            logging.info(f"Overall mAP50-95              : {metrics.box.map:.3f}")
 
 if __name__ == "__main__":
     # Determine mode based on TEST_IMAGE_PATH
