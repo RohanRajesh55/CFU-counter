@@ -1,0 +1,73 @@
+# ===================================================================
+# YOLOv8 Training Configuration File
+# ===================================================================
+
+# -------------------
+# DATASET & CLASS SETTINGS
+# -------------------
+path: /home/ashwin/projects/Bacteria_colony_detection/yolo
+train: images/train
+val: images/val # This line is sufficient to enable validation
+
+# Class configuration
+nc: 7
+names:
+  - "B.subtilis"
+  - "C.albicans"
+  - "Contamination"
+  - "Defect"
+  - "E.coli"
+  - "P.aeruginosa"
+  - "S.aureus"
+
+# -------------------
+# MODEL & TRAINING SETTINGS
+# -------------------
+project: "runs/colony_yolo"
+name: "yolov8m_optimized_run"
+
+model: "yolov8m.pt"
+epochs: 100
+patience: 30
+imgsz: 1024
+batch: 16
+device: "0"
+workers: 8
+resume: false
+
+# --- Performance Optimizations (Essential) ---
+cache: true
+amp: true
+
+# -------------------
+# OPTIMIZER & SCHEDULER
+# -------------------
+optimizer: "auto"
+lr0: 0.001
+lrf: 0.01
+cos_lr: true
+
+# -------------------
+# AUGMENTATION SETTINGS (Refined for Fine-Tuning)
+# -------------------
+hsv_h: 0.015
+hsv_s: 0.4
+hsv_v: 0.3
+degrees: 10.0
+translate: 0.1
+scale: 0.3
+shear: 2.0
+flipud: 0.5
+fliplr: 0.5
+mosaic: 1.0
+mixup: 0.1
+
+# --- Advanced Augmentations (Essential) ---
+copy_paste: 0.1
+close_mosaic: 10
+
+# -------------------
+# VALIDATION & EXPORT
+# -------------------
+plots: true # Generate analysis plots (e.g., confusion matrix)
+iou: 0.5 # Set IoU threshold for validation metrics
