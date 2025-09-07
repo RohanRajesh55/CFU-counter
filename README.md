@@ -62,9 +62,10 @@ The fine-tuned YOLOv8 model demonstrated outstanding performance, proving to be 
 | **Overall mAP@.5:.95**      | **0.622**  |
 | **Overall Precision**       | **0.981**  |
 | **Overall Recall**          | **0.966**  |
-| **Buffered Count Accuracy** | **98.27%** |
+| **Count Accuracy**          | **69.49%** |
+| **Buffered Count Accuracy** | **88.73%** |
 
 **Key Findings:**
 
 - The model achieved an exceptional **Precision of 98.1%**, indicating that its detections are highly reliable with very few false positives.
-- The **Buffered Count Accuracy of 98.27%** shows that for nearly all images, the model's total count is within a small, scientifically acceptable margin of error, making it a robust tool for quantitative analysis.
+- The **Buffered Count Accuracy of 88.73%** shows that for nearly all images, the model's total count is within a small, scientifically acceptable margin of error(~5% of actual count), making it a robust tool for quantitative analysis.
