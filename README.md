@@ -1,71 +1,123 @@
-### ## Introduction
+---
+# CFU‑Counter: Automated Colony Counting on Agar Plates
 
-This project aims to automate the process of counting bacteria colonies on agar plates, a fundamental task in microbiology that is traditionally performed manually. Manual counting is slow, tedious, and prone to human error. Our goal is to develop a robust system using deep learning to accurately count and classify the number of Colony Forming Units (CFU) from a digital image.
+## Introduction
+
+Counting bacterial colonies on agar plates is a fundamental task in microbiology, but manual counting is slow, tedious, and prone to error. This project develops a **deep learning–based system** to automatically count and classify Colony Forming Units (CFU) from digital images, providing both speed and reproducibility.
+---
+
+## Dataset
+
+### Source
+
+We use the **AGAR dataset** (Annotated Germs for Automated Recognition) provided by NeuroSYS — a comprehensive public dataset for microbiology computer vision tasks.
+
+### Components
+
+Each sample includes:
+
+- **Image:** High‑resolution photo of a petri dish, spanning diverse colony types, densities (empty to confluent), and lighting conditions.
+- **Annotation (.json):**
+  - `"colonies_number"`: True colony count
+  - `"classes"`: Plate‑level colony type(s)
+  - `"labels"`: Bounding box coordinates + class for each colony
+
+### Preprocessing
+
+- Validated JSON integrity, normalized class names
+- Cropped/letterboxed images to dish region
+- Stratified train/val/test splits by class and density
 
 ---
 
-### ## Dataset
+## Methodology
 
-#### Source
+We explored two strategies:
 
-The project utilizes the **AGAR dataset** from _The Annotated Germs for Automated Recognition_, provided by NeuroSYS. It's a comprehensive public dataset designed for computer vision tasks in microbiology.
+### 1. Custom Multi‑Task CNN
 
-#### Components
+- **Architecture:** 5 convolutional blocks with BatchNorm → shared embedding → two heads:
+  - **Regression head:** Predicts total colony count
+  - **Classification head:** Predicts plate‑level class
+- **Loss:** MSE (count) + Cross‑Entropy (class)
+- **Training:** Adam optimizer, ReduceLROnPlateau, early stopping
+- **Augmentation:** Flips, rotations, mild color jitter
 
-Each sample in the dataset consists of two parts:
+### 2. YOLOv8 Object Detection
 
-1.  **Image:** A high-resolution digital photograph of a petri dish. The images feature a wide variety of bacteria types, colony densities (from empty to uncountable), and lighting conditions.
-2.  **Annotation File:** A corresponding `.json` file that contains the ground truth information, including:
-    - `"colonies_number"`: The true total count of colonies.
-    - `"classes"`: The type of bacteria present on the plate.
-    - `"labels"`: A list of **bounding box coordinates** for each individual colony, which is critical for the object detection approach.
-
----
-
-### ## Methodology & Models Explored
-
-To tackle this problem, we investigated two distinct deep learning strategies: a custom multi-task CNN and a state-of-the-art object detection model.
-
-#### Approach 1: Custom CNN for Multi-Task Learning
-
-Our initial approach involved a multi-task learning framework using a custom Convolutional Neural Network built from scratch in PyTorch.
-
-- **Model:** A deep CNN was designed with 5 convolutional blocks. Each block uses Batch Normalization for stable training. The network has two separate output heads:
-  1.  A **Regression Head** to predict the total colony count.
-  2.  A **Classification Head** to predict the overall colony type for the plate.
-- **Training:** The model was trained to minimize a combined loss function (Mean Squared Error for the count and Cross-Entropy for the type), optimized with an Adam optimizer, a `ReduceLROnPlateau` scheduler, and Early Stopping.
-- **Data Augmentation:** To improve generalization, the training data was augmented with random flips, rotations, and color jitter.
-
-#### Approach 2: YOLOv8 for Object Detection (Advanced Method)
-
-To achieve a more granular and powerful analysis, we reframed the problem from simple regression to **object detection**. This approach aims to locate and classify _every single colony_ on the plate.
-
-- **Model:** We selected **YOLOv8**, a state-of-the-art, single-stage object detector known for its exceptional speed and accuracy. The pre-trained `yolov8m` (medium) variant was fine-tuned on the AGAR dataset.
-- **Task Formulation:** Instead of predicting a single count, YOLOv8 processes an image and outputs a list of bounding boxes. For each box, it provides:
-  1.  The **class** of the individual colony (e.g., `E.coli`, `Defect`).
-  2.  The **coordinates** of the colony on the plate.
-  3.  A **confidence score** for the detection.
-      The final colony count is then simply the total number of boxes detected.
-- **Advantages over Custom CNN:**
-  - **Per-Colony Information:** Provides the location and class of each colony, not just a total.
-  - **Handles Mixed Cultures:** Can detect and count multiple different classes within the same image, which a single-label classification head cannot.
-  - **Superior Accuracy:** Leverages a powerful pre-trained architecture, which led to significantly higher performance in our experiments.
+- **Formulation:** Detect each colony with bounding box, class, and confidence; CFU = number of detections
+- **Model:** Fine‑tuned YOLOv8m on AGAR
+- **Advantages:**
+  - Per‑colony localization and class
+  - Handles mixed cultures
+  - Pretrained backbone → higher accuracy and robustness
 
 ---
 
-### ## Results of YOLOv8 Approach
+## Results
 
-The fine-tuned YOLOv8 model demonstrated outstanding performance, proving to be a highly effective solution.
+| Metric                            | Score      |
+| --------------------------------- | ---------- |
+| **mAP@.5:.95**                    | **0.622**  |
+| **Precision**                     | **0.981**  |
+| **Recall**                        | **0.966**  |
+| **Count Accuracy**                | **69.49%** |
+| **Buffered Count Accuracy (±5%)** | **88.73%** |
 
-| Metric                      | Score      |
-| :-------------------------- | :--------- |
-| **Overall mAP@.5:.95**      | **0.622**  |
-| **Overall Precision**       | **0.981**  |
-| **Overall Recall**          | **0.966**  |
-| **Count Accuracy**          | **69.49%** |
-| **Buffered Count Accuracy** | **88.73%** |
+### Key Findings
 
-**Key Findings:**
+- **High precision (98.1%)** → very few false positives
+- **Buffered accuracy (88.7%)** → counts within ±5% of ground truth for most plates
+- **YOLOv8 outperforms CNN** by providing per‑colony explainability and robustness to mixed cultures
 
-- The model achieved an exceptional **Precision of 98.1%**, indicating that its detections are highly reliable with very few false positives.
-- The **Buffered Count Accuracy of 88.73%** shows that for nearly all images, the model's total count is within a small, scientifically acceptable margin of error(~5% of actual count), making it a robust tool for quantitative analysis.
+---
+
+## Error Analysis
+
+- **High density:** Misses or double‑boxes in confluent regions
+- **Low contrast colonies:** Missed under glare/shadows
+- **Plate edges:** Rim reflections and condensation → false positives
+- **Rare classes:** Lower AP due to imbalance
+
+**Mitigations:** dish masking, higher resolution input, tuned NMS, focal loss for class imbalance.
+
+---
+
+## CNN vs YOLOv8
+
+| Aspect              | CNN                 | YOLOv8                   |
+| ------------------- | ------------------- | ------------------------ |
+| Output              | Plate count + class | Per‑colony boxes + class |
+| Explainability      | Low                 | High                     |
+| Mixed cultures      | Not supported       | Supported                |
+| Density sensitivity | High                | Moderate                 |
+| Deployment          | Very light          | Real‑time capable        |
+
+---
+
+## Reproducibility
+
+- **Config versioning:** YAML configs for data, augmentation, model, evaluation
+- **Evaluation protocol:**
+  - Detection: COCO‑style mAP@.5:.95
+  - Counting: raw accuracy + buffered accuracy at ±2%, ±5%, ±10%
+- **Reporting:** Per‑class AP, PR curves, density‑binned results, Bland–Altman plots
+
+---
+
+## Limitations & Next Steps
+
+- **Limitations:** Confluent growth, illumination variability, rare phenotypes
+- **Future work:**
+  - Hybrid detection + segmentation for merged colonies
+  - Flat‑field correction for lighting artifacts
+  - Curriculum training by density
+  - Uncertainty‑aware counts with confidence intervals
+
+---
+
+## Citation
+
+If you use this project, please cite the AGAR dataset and this repository.
+
+---
