@@ -27,6 +27,7 @@ Each sample includes:
 - Validated JSON integrity, normalized class names
 - Cropped/letterboxed images to dish region
 - Stratified train/val/test splits by class and density
+- Balanced lighting and contrast
 
 ---
 
